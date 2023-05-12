@@ -2,11 +2,9 @@
 
 Korektor ortograficzny to narzędzie używane do identyfikowania i poprawiania błędów ortograficznych w tekście. Mimo że większość nowoczesnych edytorów tekstu ma wbudowane korektory ortograficzne, zrozumienie, jak działają i jak je stworzyć, to ciekawe zadanie z zakresu przetwarzania języka naturalnego (NLP - Natural Language Processing).
 
-Program, który stworzyliśmy, to prosty korektor ortograficzny dla języka polskiego i angielskiego. Używa on podstawowych technik NLP do identyfikowania błędów ortograficznych i sugerowania poprawek. Mimo że jest to prosta implementacja, dobrze ilustruje podstawowe koncepcje stojące za korektorem ortograficznym.
+Program, który stworzyliśmy, to prosty korektor ortograficzny dla języka polskiego i angielskiego. Używa on podstawowych technik NLP do identyfikowania błędów ortograficznych/literówek i sugerowania poprawek. Mimo że jest to prosta implementacja, dobrze ilustruje podstawowe koncepcje stojące za korektorem ortograficznym.
 
 Nasz korektor ortograficzny działa na zasadzie modelu statystycznego, który ocenia prawdopodobieństwo poszczególnych słów w tekście na podstawie ich częstości występowania w korpusie - dużym zbiorze tekstów w danym języku. Jeśli dane słowo nie występuje w korpusie, program generuje listę kandydatów na poprawki, które są "bliskie" oryginalnemu słowu (tzn. różnią się od niego o jedną lub dwie "edycje", takie jak usunięcie litery, zamiana dwóch liter miejscami, zmiana jednej litery na inną, lub dodanie litery), a następnie wybiera te, które są najbardziej prawdopodobne na podstawie ich częstości występowania w korpusie.
-
-W tym raporcie omówimy szczegółowo, jak został zbudowany nasz korektor ortograficzny, jakie techniki NLP zostały użyte, oraz jakie są jego mocne i słabe strony.
 
 # Rozwinięcie
 
@@ -29,6 +27,38 @@ Nasze podejście jest proste, ale skuteczne dla wielu typów błędów ortografi
 
 ## Implementacja detali
 
+### Funkcje klasy SpellCorrector
+
+Szczegółowe wyjaśnienie funkcji zawartych w klasie SpellCorrector:
+
+P(self, word): Ta funkcja zwraca "prawdopodobieństwo" danego słowa. Jest to zdefiniowane jako częstotliwość występowania danego słowa w korpusie dzielona przez całkowitą liczbę słów. W praktyce, jest to prosta metoda estymacji prawdopodobieństwa danego słowa w języku.
+
+correction(self, word): Ta funkcja zwraca poprawione słowo. Jeżeli słowo jest znane (tj. występuje w korpusie), jest zwracane bez zmian. W przeciwnym razie, funkcja generuje listę możliwych kandydatów i zwraca słowo z najwyższym prawdopodobieństwem.
+
+candidates(self, word): Ta funkcja generuje listę potencjalnych kandydatów na poprawkę dla danego słowa. Najpierw sprawdza, czy dane słowo jest znane. Jeżeli tak, zwraca to słowo. W przeciwnym razie, generuje listę słów, które mogą być uzyskane przez wykonanie jednej lub dwóch operacji edycyjnych na oryginalnym słowie, i zwraca te z nich, które są znane.
+
+known(self, words): Ta funkcja sprawdza, które z podanych słów są znane, tj. występują w korpusie. Zwraca zbiór tych słów.
+
+edits1(self, word): Ta funkcja generuje listę słów, które mogą być uzyskane przez wykonanie jednej operacji edycyjnej na oryginalnym słowie. Operacje edycyjne to: usunięcie litery, zamiana dwóch sąsiednich liter, zamiana litery na inną oraz wstawienie litery.
+
+edits2(self, word): Ta funkcja generuje listę słów, które mogą być uzyskane przez wykonanie dwóch operacji edycyjnych na oryginalnym słowie. Robi to poprzez wygenerowanie wszystkich słów z edits1(word), a następnie dla każdego z nich generuje wszystkie słowa z edits1. Jest to znacznie szerszy zbiór kandydatów, ale również bardziej czasochłonny do generowania.
+
+### Kolejność wywoływania funkcji
+
+1. Kiedy użytkownik wprowadza słowo do korekcji, główna funkcja correction jest wywoływana.
+
+2. Wewnątrz funkcji correction, najpierw wywoływana jest funkcja candidates dla danego słowa.
+
+3. Funkcja candidates najpierw próbuje znaleźć słowo w korpusie, wywołując funkcję known na samym słowie. Jeśli słowo jest znane, zostaje zwrócone.
+
+4. Jeśli słowo nie jest znane, funkcja candidates wywołuje funkcję edits1 na słowie, aby wygenerować wszystkie możliwe słowa, które mogą być uzyskane przez jedną operację edycyjną. Potem wywołuje funkcję known na tych słowach, aby sprawdzić, które z nich są znane. Jeśli jakiekolwiek są znane, zwraca te słowa.
+
+5. Jeżeli żadne z tych słów nie są znane, funkcja candidates wywołuje funkcję edits2 na słowie, aby wygenerować wszystkie możliwe słowa, które mogą być uzyskane przez dwie operacje edycyjne. Potem wywołuje funkcję known na tych słowach, aby sprawdzić, które z nich są znane. Jeśli jakiekolwiek są znane, zwraca te słowa.
+
+6. Jeżeli żadne z tych słów nie są znane, funkcja candidates zwraca oryginalne słowo.
+
+7. Następnie, funkcja correction wywołuje funkcję P na każdym ze słów zwróconych przez candidates, aby obliczyć ich prawdopodobieństwa. Wybiera słowo z najwyższym prawdopodobieństwem i zwraca je jako poprawione słowo.
+
 ### Funkcje edycji
 
 Nasza implementacja korzysta z czterech podstawowych operacji edycyjnych:
@@ -42,43 +72,6 @@ Nasza implementacja korzysta z czterech podstawowych operacji edycyjnych:
 4. **Wstawianie** (`inserts`): wstawia każdą możliwą literę na każdą możliwą pozycję w oryginalnym słowie.
 
 Te operacje są wykonywane na wszystkich słowach, które nie są obecne w korpusie, w celu generowania listy potencjalnych kandydatów na poprawki.
-
-### Wybór kandydatów
-
-Po wygenerowaniu kandydatów, nasz model ocenia ich prawdopodobieństwo na podstawie ich częstości występowania w korpusie. Jeżeli dla danego słowa nie udało się wygenerować żadnych kandydatów, model zwraca oryginalne słowo bez zmian. W przeciwnym wypadku, model zwraca trzy najbardziej prawdopodobne kandydaty na poprawki.
-
-### Korpusy
-
-Korzystaliśmy z korpusów dostępnych w bibliotece NLTK - korpusu Brown dla języka angielskiego i korpusu 'polish' dla języka polskiego. Te korpusy zawierają duże zbiory tekstów w odpowiednim języku, co pozwoliło nam na stworzenie modelu statystycznego oceniającego prawdopodobieństwo poszczególnych słów.
-
-Nasza implementacja jest prosta, ale efektywna dla wielu rodzajów błędów ortograficznych. Jednakże, jest kilka możliwych obszarów do dalszego rozwoju i usprawnienia, jak uwzględnienie kontekstu słowa w zdaniu czy zastosowanie bardziej zaawansowanych technik NLP i uczenia maszynowego.
-
-## Implementacja detali
-
-### Funkcje edycji
-
-Nasza implementacja korzysta z czterech podstawowych operacji edycyjnych:
-
-1. **Usuwanie** (`deletes`): usuwa każdą literę z oryginalnego słowa, tworząc nowe słowo.
-
-2. **Zamiana** (`transposes`): zamienia miejscami każde dwie sąsiednie litery w oryginalnym słowie.
-
-3. **Zmiana** (`replaces`): zmienia każdą literę w oryginalnym słowie na inną literę.
-
-4. **Wstawianie** (`inserts`): wstawia każdą możliwą literę na każdą możliwą pozycję w oryginalnym słowie.
-
-Te operacje są wykonywane na wszystkich słowach, które nie są obecne w korpusie, w celu generowania listy potencjalnych kandydatów na poprawki.
-
-### Wybór kandydatów
-
-Po wygenerowaniu kandydatów, nasz model ocenia ich prawdopodobieństwo na podstawie ich częstości występowania w korpusie. Jeżeli dla danego słowa nie udało się wygenerować żadnych kandydatów, model zwraca oryginalne słowo bez zmian. W przeciwnym wypadku, model zwraca trzy najbardziej prawdopodobne kandydaty na poprawki.
-
-### Korpusy
-
-Korzystaliśmy z korpusów dostępnych w bibliotece NLTK - korpusu Brown dla języka angielskiego i korpusu 'polish' dla języka polskiego. Te korpusy zawierają duże zbiory tekstów w odpowiednim języku, co pozwoliło nam na stworzenie modelu statystycznego oceniającego prawdopodobieństwo poszczególnych słów.
-
-Nasza implementacja jest prosta, ale efektywna dla wielu rodzajów błędów ortograficznych. Jednakże, jest kilka możliwych obszarów do dalszego rozwoju i usprawnienia, jak uwzględnienie kontekstu słowa w zdaniu czy zastosowanie bardziej zaawansowanych technik NLP i uczenia maszynowego.
-
 
 ## Obszary do dalszego rozwoju
 
