@@ -75,22 +75,19 @@ Te operacje są wykonywane na wszystkich słowach, które nie są obecne w korpu
 
 ## Obszary do dalszego rozwoju
 
-### Kontekstualne sprawdzanie pisowni
+Kontekstowe sprawdzanie pisowni: Opisany powyżej korektor pisowni analizuje tylko pojedyncze słowa bez uwzględniania ich kontekstu. Jednakże poprawna pisownia słowa często zależy od kontekstu. Na przykład słowo "read" mogłoby być błędem pisowni słowa "red" w zdaniu "I like the read car" (Lubię czerwony samochód), ale mogłoby być poprawne w zdaniu "I like to read books" (Lubię czytać książki). Kontekstowe sprawdzanie pisowni polega na użyciu kontekstu słowa (tj. słów wokół niego) do określenia najprawdopodobniej poprawnej pisowni. Można to zrobić za pomocą technik takich jak n-gramy, ukryte modele Markova, czy rekurencyjne sieci neuronowe.
 
-Aktualna implementacja nie bierze pod uwagę kontekstu, w jakim występuje dane słowo. To oznacza, że jeśli dane słowo jest pisowniowo poprawne, ale użyte jest w niewłaściwym kontekście, nasz model tego nie wykryje. Przykładem może być pomyłka "morze" zamiast "może". Obie formy są poprawne językowo, ale ich użycie zależy od kontekstu zdania.
+Modele Deep Learning: Modele Deep Learning, w szczególności rekurencyjne sieci neuronowe (RNN), transformery (takie jak BERT, GPT) i ich warianty, odniosły duży sukces w wielu zadaniach NLP, w tym w korekcji pisowni. Modele te mogą uchwycić skomplikowane wzorce i zależności w danych, co czyni je bardziej dokładnymi niż prostsze metody. Mogą być one używane zarówno do sprawdzania pisowni bez kontekstu, jak i kontekstowego.
 
-Rozwiązaniem tego problemu może być zastosowanie modelu języka, który ocenia prawdopodobieństwo sekwencji słów, a nie pojedynczych słów. Takie modele, zwane często modelami n-gramów, są powszechnie stosowane w NLP.
+Modelowanie języka: Model języka to model, który może przewidzieć prawdopodobieństwo sekwencji słów. Może to być używane do oceny różnych możliwych poprawek słowa lub zdania na podstawie ich prawdopodobieństw. Modele języka mogą być tworzone za pomocą różnych technik, w tym n-gramów, RNN i transformerów.
 
-### Zaawansowane techniki NLP i uczenia maszynowego
+Algorytmy fonetyczne: Algorytmy fonetyczne, takie jak Soundex, Metaphone, czy Double Metaphone, kodują słowa na podstawie ich fonetycznego podobieństwa. Mogą one być używane do sugerowania poprawek, które brzmią podobnie do błędnie napisanego słowa, co może być szczególnie przydatne przy poprawianiu literówek.
 
-Innym obszarem do dalszego rozwoju jest zastosowanie zaawansowanych technik NLP i uczenia maszynowego, takich jak sieci neuronowe, które mogą być w stanie lepiej modelować złożoność języka naturalnego i dokonywać bardziej precyzyjnych poprawek.
+Modele sekwencja-do-sekwencji: Modele sekwencja-do-sekwencji (seq2seq) są typem modelu, który może przekształcić jedną sekwencję (np. zdanie z błędami pisowni) w inną sekwencję (np. to samo zdanie z poprawkami). Te modele, które zazwyczaj są implementowane jako RNN lub transformery, mogą być trenowane do poprawiania błędów pisowni w bardziej elastyczny i potężny sposób niż metody, które patrzą na każde słowo indywidualnie.
 
-Na przykład, model zwany BERT, opracowany przez firmę Google, jest w stanie dokonywać kontekstualnej korekcji pisowni, oceniając prawdopodobieństwo poszczególnych słów na podstawie ich kontekstu w zdaniu, a nie tylko na podstawie ich pojedynczych częstości występowania.
+Model błędów: Model błędów to model typów błędów, które ludzie popełniają podczas pisania. Na przykład, ludzie często popełniają literówki, naciskając niewłaściwy klawisz na klawiaturze, więc dobry model błędów mó
 
-Jednakże, implementacja takiego modelu jest znacznie bardziej złożona i wymaga dużej ilości danych do treningu, a także znacznej mocy obliczeniowej.
-
-Podsumowując, nasza aktualna implementacja korektora ortograficznego jest prosta, ale skuteczna dla wielu typów błędów ortograficznych. Jest jednak wiele obszarów do dalszego rozwoju i usprawnienia, które mogą znacznie poprawić jakość korekcji.
-
+Regenerate response
 # Podsumowanie
 
 Nasza implementacja korektora ortograficznego oparta jest na statystycznym modelu języka, który ocenia prawdopodobieństwo poszczególnych słów na podstawie ich częstości występowania w korpusie. Nasze podejście jest skuteczne dla wielu typów błędów ortograficznych, ale ma też swoje ograniczenia.
